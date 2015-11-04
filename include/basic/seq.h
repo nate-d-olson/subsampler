@@ -145,11 +145,11 @@ void sequence_remove_low_quality(Sequence * seq, char threshold);
 
 Sequence * sequence_new(int max_read_length, int max_name_length, char offset);
 
-void sequence_print_fasta(FILE * f, Sequence * seq);
+void sequence_print_fasta(FILE * f, Sequence * seq, char * read_id);
 
 void sequence_print_fasta_subseq(FILE * f,int start, int end, Sequence * seq);
 
-void sequence_print_fastq(FILE * f,  Sequence * seq);
+void sequence_print_fastq(FILE * f,  Sequence * seq, char * read_id);
 
 void sequence_iterator(void(*f)(char, int), Sequence * seq);
 

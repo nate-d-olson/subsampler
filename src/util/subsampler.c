@@ -38,6 +38,7 @@
 struct arguments {
     char * file_in;
     char * file_out;
+    char * read_id;
     int quality_offset;
     double probability;
     int append;
@@ -51,9 +52,10 @@ void sampler_parse(int argc, char **argv, struct arguments * arg);
 //void print_help();
 
 static void print_help() {
-    log_and_screen_printf("subsampler [-a] [-f sanger | illumina] [-i input] [-o output] [-l max_read_length] [-n max_name_length] [-p probability] [-q quality_offset] [-s rand_seed] [-h] [-L log_file]\n");
+    log_and_screen_printf("subsampler [-a] [-f sanger | illumina] [-i input] [-id read_id] [-o output] [-l max_read_length] [-n max_name_length] [-p probability] [-q quality_offset] [-s rand_seed] [-h] [-L log_file]\n");
     log_and_screen_printf("\t-a\t Append to an existing file \n");
     log_and_screen_printf("\t-f\t sanger for offset +33, illumina for offset +64.\n");
+    log_and_screen_printf("\t-d\t read set id.\n");
     log_and_screen_printf("\t-i\t Input from a file. Default stdin.\n");
     log_and_screen_printf("\t-o\t Output to a file. Default stdout.\n");
     log_and_screen_printf("\t-l\t Maximum read length. Default 2000 \n");
@@ -86,6 +88,9 @@ void parse_opt(int key, char *arg, struct arguments *arguments) {
         case 'i':
             arguments->file_in = arg;
             break;
+        case 'd':
+            arguments->read_id = arg;
+            break;
         case 'l':
             arguments->max_read_length = atoi(arg);
             break;
@@ -115,7 +120,7 @@ void sampler_parse(int argc, char **argv, struct arguments * arg) {
     opterr = 0;
     int c;
 
-    while ((c = getopt(argc, argv, "af:hi:l:n:o:p:q:s:L")) != -1) {
+    while ((c = getopt(argc, argv, "af:hi:d:l:n:o:p:q:s:L")) != -1) {
         parse_opt(c, optarg, arg);
     }
 }
@@ -133,7 +138,7 @@ const int isFasta(const char* filename) {
 
 const int isFastq(const char* filename) {
     const char *ext = get_filename_ext(filename);
-    return strcmp(ext, "fq") == 0 || strcmp(ext, "fasta") == 0;
+    return strcmp(ext, "fq") == 0 || strcmp(ext, "fastq") == 0;
 }
 
 int main(int argc, char * argv[]) {
@@ -150,6 +155,7 @@ int main(int argc, char * argv[]) {
     //Defaults
     args.file_out = "-";
     args.file_in = "-";
+    args.read_id = "subsample_";
     args.probability = 0.01;
     args.append = 0;
     args.quality_offset = 33;
@@ -163,6 +169,7 @@ int main(int argc, char * argv[]) {
     if (args.log_file != NULL) {
         log_start(args.log_file);
     }
+    
     log_and_screen_printf("Subsampler\n");
     log_write_timestamp(1);
 
@@ -198,7 +205,7 @@ int main(int argc, char * argv[]) {
             p = (double) rand() / RAND_MAX;
             readed++;
             if (p < args.probability) {
-                sequence_print_fastq(out, seq);
+                sequence_print_fastq(out, seq, args.read_id);
                 printed++;
             }
         }
@@ -209,7 +216,7 @@ int main(int argc, char * argv[]) {
             p = (double) rand() / RAND_MAX;
             readed++;
             if (p < args.probability) {
-                sequence_print_fasta(out, seq);
+                sequence_print_fasta(out, seq, args.read_id);
                 printed++;
             }
         }

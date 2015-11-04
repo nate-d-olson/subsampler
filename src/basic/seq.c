@@ -1419,11 +1419,11 @@ void sequence_mask(int from, int to, Sequence * seq) {
     }
 }
 
-void sequence_print_fasta(FILE * f, Sequence * seq) {
+void sequence_print_fasta(FILE * f, Sequence * seq, char * read_id) {
     assert(seq != NULL);
 
     if (strlen(seq->seq) > 0) {
-        fprintf(f, ">%s\n%s\n", seq->name, seq->seq);
+        fprintf(f, ">%s_%s\n%s\n", read_id, seq->name, seq->seq);
         fflush(f);
     }
 }
@@ -1450,7 +1450,7 @@ void sequence_print_fasta_subseq(FILE * f, int starta, int enda, Sequence * seq)
 
 }
 
-void sequence_print_fastq(FILE * f, Sequence * seq) {
+void sequence_print_fastq(FILE * f, Sequence * seq, char * read_id) {
 
 #ifndef NO_BOUNDS_CHECK		// For debugging purposes, in
     // "production", if coded properly, we can 
@@ -1461,7 +1461,7 @@ void sequence_print_fastq(FILE * f, Sequence * seq) {
         exit(-1);
     }
 #endif
-    fprintf(f, "@%s\n%s\n+\n", seq->name, seq->seq);
+    fprintf(f, "@%s_%s\n%s\n+\n", read_id, seq->name, seq->seq);
     int i;
     for (i = 0; i < seq->length; i++) {
         fprintf(f, "%c", seq->qual[i] + seq->qual_offset);
