@@ -46,21 +46,26 @@ struct arguments {
     int max_name_lenght;
     char * log_file;
     unsigned int seed;
+    // two file parameters
+    char * second_file_in;
+    double proportion; // proportion of first file
 };
 void parse_opt(int key, char *arg, struct arguments *arguments);
 void sampler_parse(int argc, char **argv, struct arguments * arg);
 //void print_help();
 
 static void print_help() {
-    log_and_screen_printf("subsampler [-a] [-f sanger | illumina] [-i input] [-id read_id] [-o output] [-l max_read_length] [-n max_name_length] [-p probability] [-q quality_offset] [-s rand_seed] [-h] [-L log_file]\n");
+    log_and_screen_printf("subsampler [-a] [-f sanger | illumina] [-i input] [-j second_input] [-d read_id] [-o output] [-l max_read_length] [-n max_name_length] [-p probability] [-q quality_offset] [-s rand_seed] [-h] [-L log_file]\n");
     log_and_screen_printf("\t-a\t Append to an existing file \n");
     log_and_screen_printf("\t-f\t sanger for offset +33, illumina for offset +64.\n");
     log_and_screen_printf("\t-d\t read set id.\n");
     log_and_screen_printf("\t-i\t Input from a file. Default stdin.\n");
+    log_and_screen_printf("\t-j\t Second input file. Default stdin.\n");
     log_and_screen_printf("\t-o\t Output to a file. Default stdout.\n");
     log_and_screen_printf("\t-l\t Maximum read length. Default 2000 \n");
     log_and_screen_printf("\t-n\t Maximum name length. Default 1000\n");
     log_and_screen_printf("\t-p\t Probability to pick a read. Default 0.01 (1\%% of the reads will be picked)\n");
+    log_and_screen_printf("\t-r\t Proportion of first file in mixture output. Default 0.5 (half reads in output will be from the first file)\n");
     log_and_screen_printf("\t-q\t Quality offset. Default 33. Strictly, not necessery, as the same offset is applied for the in and out\n");
     log_and_screen_printf("\t-s\t Seed for the random number generator. The defualt is a timestamp. Useful if you want to get the same output on different runs.\n");
     log_and_screen_printf("\t-h\t Prints this help\t \n");
@@ -88,6 +93,9 @@ void parse_opt(int key, char *arg, struct arguments *arguments) {
         case 'i':
             arguments->file_in = arg;
             break;
+        case 'j':
+            arguments->second_file_in = arg;
+            break;
         case 'd':
             arguments->read_id = arg;
             break;
@@ -102,6 +110,9 @@ void parse_opt(int key, char *arg, struct arguments *arguments) {
             break;
         case 'p':
             arguments->probability = atof(arg);
+            break;
+        case 'r':
+            arguments->proportion = atof(arg);
             break;
         case 'q':
             arguments->quality_offset = atoi(arg);
@@ -150,13 +161,16 @@ int main(int argc, char * argv[]) {
 
     struct arguments args;
     FILE * in;
+    FILE * second_in;
     FILE * out;
     Sequence * seq;
     //Defaults
     args.file_out = "-";
     args.file_in = "-";
+    args.second_file_in = "-";
     args.read_id = "subsample_";
     args.probability = 0.01;
+    args.proportion = 0.5;
     args.append = 0;
     args.quality_offset = 33;
     args.max_name_lenght = 1000;
@@ -200,6 +214,15 @@ int main(int argc, char * argv[]) {
     unsigned long readed = 0;
     unsigned long printed = 0;
 
+    if(strcmp(args.second_file_in, "-") != 0){
+        in = fopen(args.second_file_in, "r"); //open file of file names
+        if (in == NULL) {
+            log_and_screen_printf("Unable to open file %s\n", args.second_file_in);
+            exit(-1);
+        }
+        // make mixture
+        //seq_1
+    }
     if (isFastq(args.file_in)) {
         while (read_sequence_from_fastq(in, seq, args.max_read_length)) {
             p = (double) rand() / RAND_MAX;
